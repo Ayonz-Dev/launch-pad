@@ -1,0 +1,23 @@
+{
+  "name": "launch-pad",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ayonz internal platform. A monorepo home for internal apps that share one identity, RBAC and database layer.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:costing": "npm run dev --workspace @launchpad/costing",
+    "build": "npm run build --workspaces --if-present",
+    "build:costing": "npm run build --workspace @launchpad/costing",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "overrides": {
+    "@supabase/supabase-js": "2.45.4"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
