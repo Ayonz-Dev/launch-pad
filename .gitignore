@@ -30,3 +30,7 @@ yarn-error.log*
 
 # supabase local
 .supabase/
+
+# Real commercial data seeds — never commit to the public repo. Delivered privately.
+database/03_shipping_seed.sql
+database/*_data_seed.sql

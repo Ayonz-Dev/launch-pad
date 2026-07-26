@@ -265,12 +265,17 @@ export async function fetchRateAssumptions(): Promise<Record<string, number>> {
 // client, pointed at the visibility schema. Returns [] if the schema or table is
 // not present (for example running against a project without shipping applied).
 //
-// Funding-currency allocation (which of AUD/GBP/EUR settles each order) is an
-// open decision (SPEC.md section 8). Until it is settled, every order is quoted
-// AUD/USD; the total incoming USD is currency-agnostic and correct regardless.
+// All supplier payments are made in USD, so the requirement is a single USD
+// figure; AUD/GBP/EUR are alternative funding currencies (SPEC section 8). Every
+// order is quoted AUD/USD here; the total incoming USD is currency-agnostic.
+//
+// Only FUTURE shipments count as a requirement: a shipment whose ETA has passed
+// is already paid, not money still to find. So this filters to eta_current on or
+// after today. Historical imports therefore do not inflate the future exposure.
 export async function fetchIncomingFromShipping(): Promise<IncomingOrder[]> {
   const client = getServerClient();
   if (!client) return [];
+  const today = new Date().toISOString().slice(0, 10);
   try {
     const { data, error } = await client
       .schema('visibility')
@@ -278,6 +283,7 @@ export async function fetchIncomingFromShipping(): Promise<IncomingOrder[]> {
       .select('id, reference, po, container_no, fob_value_usd, eta_current')
       .not('fob_value_usd', 'is', null)
       .not('eta_current', 'is', null)
+      .gte('eta_current', today)
       .order('eta_current', { ascending: true });
     if (error) return [];
     return (data ?? [])
