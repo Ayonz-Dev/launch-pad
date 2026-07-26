@@ -17,6 +17,7 @@ every app reads roles the same way.
 launch-pad/
   apps/
     costing/          # Product costing and five-step MYOB approval chain
+    hedging/          # FX hedging (placeholder on the shared shell, to be ported)
   packages/
     db/               # Supabase browser/server clients, DB types, SQL migrations
     auth/             # Shared identity: roles, permissions, approval chain, guards
@@ -39,6 +40,13 @@ Manager -> Final Check (CEO) -> Accounts -> Approved.
 The costing is shown as an on-screen spreadsheet. Only input cells are editable;
 every calculated cell is derived server-side from a read-only view and is never
 stored. See `apps/costing/README.md` for the full contract.
+
+### `apps/hedging`
+
+A placeholder app that proves the shared shell end to end: it signs in through
+`@launchpad/shell`, is framed by the shared `AppShell`, and reads the same
+identity as costing. Content is blank until the real Hedging-Tool logic is
+ported in. See `apps/hedging/README.md`.
 
 ## Packages
 
