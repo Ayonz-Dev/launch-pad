@@ -1,0 +1,321 @@
+{
+  "_comment": "Sea (and unspecified-mode) origin->destination pairs to route with searoute. Keys are canonical port names from ports.data.json. Add a pair here (or via lanes:add-port --lane POL__POD) then run npm run lanes:generate.",
+  "pairs": [
+    {
+      "pol": "BEIJIAO",
+      "pod": "ROTTERDAM"
+    },
+    {
+      "pol": "BEIJIAO",
+      "pod": "VENICE"
+    },
+    {
+      "pol": "GUANGZHOU",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "HONGKONG",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "HONGKONG",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "HONGKONG",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "HONGKONG",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "JIANGMEN",
+      "pod": "ACAJUTLA"
+    },
+    {
+      "pol": "NANJING",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "NANJING",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "NANJING",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "NANJING",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "NANJING",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "NANSHA",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "NANSHA",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "NANSHA",
+      "pod": "FELIXSTOWE"
+    },
+    {
+      "pol": "NANSHA",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "NANSHA",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "FELIXSTOWE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "GDANSK"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "LA SPEZIA"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "SOUTHAMPTON"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "TRIESTE"
+    },
+    {
+      "pol": "NINGBO",
+      "pod": "VENICE"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "ACAJUTLA"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "GDANSK"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "SHANGHAI",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "ACAJUTLA"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "AUCKLAND"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "BUENOS AIRES"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "NAGOYA"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "NAPOLI"
+    },
+    {
+      "pol": "SHEKOU",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "SHENZHEN",
+      "pod": "BYDGOSZCZ"
+    },
+    {
+      "pol": "SHENZHEN",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "SHENZHEN",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "SHUNDE",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "SHUNDE",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "AUCKLAND"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "AUGUSTA"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "GDANSK"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "XIAMEN",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "XIAOLAN",
+      "pod": "ADELAIDE"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "BUENOS AIRES"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "CIVITAVECCHIA"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "FELIXSTOWE"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "FREMANTLE"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "GDANSK"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "GIOIA TAURO"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "LA SPEZIA"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "LONDON GATEWAY"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "ROTTERDAM"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "YANTIAN",
+      "pod": "VENICE"
+    },
+    {
+      "pol": "ZHANGJIAGANG",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "ZHANGJIAGANG",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "ZHANGJIAGANG",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "ZHENGZHOU",
+      "pod": "SYDNEY"
+    },
+    {
+      "pol": "ZHONGSHAN",
+      "pod": "BRISBANE"
+    },
+    {
+      "pol": "ZHONGSHAN",
+      "pod": "MELBOURNE"
+    },
+    {
+      "pol": "ZHONGSHAN",
+      "pod": "SYDNEY"
+    }
+  ]
+}

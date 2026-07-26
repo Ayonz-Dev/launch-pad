@@ -34,3 +34,7 @@ yarn-error.log*
 # Real commercial data seeds — never commit to the public repo. Delivered privately.
 database/03_shipping_seed.sql
 database/*_data_seed.sql
+
+# Sea-lane generator Python venv (see apps/shipping/scripts/lanes)
+apps/shipping/scripts/lanes/venv/
+**/__pycache__/

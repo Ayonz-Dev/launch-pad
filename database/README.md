@@ -73,6 +73,15 @@ transhipment notes, retailer notes, and any other cell comment or unmapped
 column). Idempotent, so safe to run and re-run. Fresh projects get these from
 `01` already; run `04` only on a project stood up before this change.
 
+## 4. `05_lane_maintainer_role.sql` (run on the live project)
+
+Adds a `Lane Maintainer` role (visibility application) so shipping-lane
+maintenance can be assigned to one specific user. That person runs the
+`npm run lanes:add-port` / `npm run lanes:generate` CLI in
+`apps/shipping/scripts/lanes` when a new destination port appears in the daily
+reports. Idempotent. Fresh projects get the role from `01` already; run `05`
+only on a project stood up before this change.
+
 ## After both
 
 ```sql

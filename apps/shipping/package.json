@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:monday-mapping": "npx tsx --test src/lib/monday/mapping.test.ts",
     "test:import": "npx tsx --test src/lib/import/parseReport.test.ts",
+    "lanes:add-port": "npx tsx scripts/lanes/add-port.mts",
+    "lanes:generate": "npx tsx scripts/lanes/generate.mts",
     "catalog:sync:monday": "npx tsx scripts/monday/run-sync.ts"
   },
   "dependencies": {
