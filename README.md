@@ -16,7 +16,7 @@ every app reads roles the same way.
 ```
 launch-pad/
   apps/
-    costing/          # Product costing and five-step MYOB approval chain
+    costing/          # Ayonz Costing Platform: quotes, sales/manager/ceo approval (real app, IAM)
     hedging/          # FX hedging (placeholder on the shared shell, to be ported)
     shipping/         # Shipment visibility control tower (ported, per-user auth + RLS)
   packages/
@@ -32,15 +32,12 @@ and depend on `@launchpad/db` and `@launchpad/auth`.
 
 ### `apps/costing`
 
-Takes a single product costing through a five-step approval chain and, on final
-approval, produces a CSV ready to import into MYOB Acumatica.
-
-Chain: Account Coordinator (builds and submits) -> Account Manager -> General
-Manager -> Final Check (CEO) -> Accounts -> Approved.
-
-The costing is shown as an on-screen spreadsheet. Only input cells are editable;
-every calculated cell is derived server-side from a read-only view and is never
-stored. See `apps/costing/README.md` for the full contract.
+The Ayonz Costing Platform: manufacturer-to-retail costing, quotes and a
+sales -> manager -> ceo approval chain, with customers, contacts, a product
+catalogue, rate cards and a factory purchase-order export. The real app (not a
+prototype), down-ported to the monorepo stack and authorising against the shared
+IAM schema. It keeps its own persona-aware chrome rather than the shared shell.
+See `apps/costing/README.md`.
 
 ### `apps/hedging`
 

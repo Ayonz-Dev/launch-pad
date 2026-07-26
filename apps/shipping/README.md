@@ -38,11 +38,10 @@ only requires a session and lets the database policies do the rest.
 
 ## Database
 
-`supabase/migrations/0001_visibility_schema_and_rls.sql` is the canonical
-visibility schema and its RLS, copied from the shared costing platform. It
-depends on the platform's `iam` / `iam_private` schema (organisations,
-memberships, roles, permissions), which is created by the costing platform's
-initial migration on the same project. Apply it to the shared project; do not
+The visibility schema and its RLS live in the shared schema of record at
+`packages/db/migrations` (`20260715025400_shipment_visibility.sql`), alongside
+the `iam` schema it depends on and the sourcing catalogue tables. Apply the
+whole set in filename order to the shared project; do not
 create a second copy of the IAM tables.
 
 ## Monday catalogue sync
@@ -78,7 +77,7 @@ Environment (see `.env.local.example`):
 - Optional: `MONDAY_SYNC_CONCURRENCY`, `MONDAY_API_VERSION`, `SOURCING_DB_SCHEMA`.
 
 The catalogue tables it writes to are defined in
-`supabase/migrations/0002_sourcing_catalog.sql`.
+`packages/db/migrations/20260724000000_sourcing_catalog.sql`.
 
 ## Local setup
 

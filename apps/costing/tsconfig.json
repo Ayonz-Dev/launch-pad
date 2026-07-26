@@ -3,18 +3,17 @@
   "compilerOptions": {
     "noEmit": true,
     "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "incremental": true,
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    // The real app was written under `strict` but not `noUncheckedIndexedAccess`.
+    // Keep its original strictness so the down-port compiles unchanged.
+    "noUncheckedIndexedAccess": false,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
-    "allowJs": true
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -22,7 +21,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

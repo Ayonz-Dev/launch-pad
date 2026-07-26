@@ -154,16 +154,30 @@ resolved in the shared layer.
   layer against the real schema it targets. In mock mode it stays auth-free so
   the no-keys dev experience is intact.
 
-### What is deliberately NOT reconciled yet
+## D9. apps/costing is the real Costing Platform, down-ported
 
-`apps/costing` is still the prototype built from `ayonz_costing_schema.sql`
-(flat `profiles.role`, five-step chain, `costings` + `costing_computed`). The
-real platform models costing differently (the `costing` schema: quotes with a
-sales / manager / ceo approval model). The prototype keeps its own local schema
-and the profiles-based helpers (`@launchpad/auth` still exports `roles.ts` /
-`guards.ts` for it), so it keeps working unchanged. Replacing it with the real
-Costing Platform on the IAM model is the next migration, and a larger one than
-this reconciliation.
+The prototype costing app was replaced with the real Ayonz Costing Platform
+(quotes, sales / manager / ceo approval, customers, contacts, catalogue, rate
+cards, factory PO export). It already authorises against the shared IAM schema,
+so this is the identity unification promised in D8, now realised in the app.
+
+- Down-ported, not rebuilt from scratch. The real app was authored on Next 16 /
+  React 19 / supabase-js 2.110; it was down-ported to the monorepo stack (Next
+  14 / React 18 / supabase-js 2.45) so the repo stays single-stack. The app used
+  almost no newer-stack features, so the change was small: version pins, three
+  route handlers whose `params` type was unwrapped from a Promise (Next 14 route
+  params are not promises), and a webpack `IgnorePlugin` for a `node:zlib`
+  dynamic-import fallback that the browser never reaches. Verified by a green
+  production build (14 routes) and 23 of 26 unit tests; the three failures are a
+  missing binary Excel template that is not committed to git, not a code issue.
+- Kept its own auth UX. The app has a client `SessionProvider`, a persona and
+  team aware `AccessPersonaProvider` and its own `AppSidebar`, all reading the
+  IAM schema directly. It is deliberately NOT put on `@launchpad/shell`, which is
+  simpler than what this app already has. Forcing the shared chrome would
+  regress it, and it also uses the newer `PUBLISHABLE_KEY` env name rather than
+  the shell's `ANON_KEY`. So it does not depend on the shared UI packages; the
+  integration that matters (one identity model) is at the shared IAM data layer.
+  The shared shell remains for the lighter apps (hedging, shipping).
 
 ## Open questions (do not resolve unilaterally)
 
