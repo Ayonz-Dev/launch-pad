@@ -315,3 +315,16 @@ textarea:focus {
   background: rgba(248, 113, 113, 0.15);
   color: var(--bad);
 }
+
+/* Shared card + note styles for the spot chart panels (SpotChartPanel). */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}

@@ -3,6 +3,7 @@ import { KpiCard } from '../components/KpiCard';
 import { ScenarioSwitcher } from '../components/ScenarioSwitcher';
 import { CoveragePairTable } from '../components/CoveragePairTable';
 import { RateChart } from '../components/RateChart';
+import { SpotChartPanel } from '../components/SpotChartPanel';
 import { isSupabaseConfigured } from '../lib/supabase/server';
 import {
   fetchCash,
@@ -61,6 +62,8 @@ export default async function DashboardPage({
           <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>), then run the migrations in{' '}
           <code>supabase/migrations</code>.
         </p>
+        <h2 className="section-title">Live spot and projection</h2>
+        <SpotChartPanel pair="AUD/USD" base="AUD" />
       </main>
     );
   }
@@ -150,6 +153,9 @@ export default async function DashboardPage({
           }
         />
       </section>
+
+      <h2 className="section-title">Live spot and projection</h2>
+      <SpotChartPanel pair="AUD/USD" base="AUD" />
 
       <h2 className="section-title">{CHART_PAIR} spot, predictions and forwards</h2>
       {chartRates ? (
