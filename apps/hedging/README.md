@@ -25,15 +25,31 @@ stack.
 - Builds on the monorepo stack (Next 14 / React 18 / supabase-js 2.45); 54 unit
   tests pass.
 
-Still to come (see CONSOLIDATION-MAP.md):
+Increment 2 (done): the crossrate chart UI is overlaid. A price-history panel
+with **1D / 1W / 1M / 1Y** tabs sits beside a forward-projection panel
+(damped-Holt, 80% band), from the keyless Frankfurter (ECB) feed with a
+synthetic fallback. `components/SpotChartPanel` + `SpotRateChart`, dark-themed.
 
-- Overlay the crossrate-rebuild chart UI (a price-history chart with
-  **1D / 1W / 1M / 1Y** tabs beside a forward-projection chart).
-- Wire into the shared platform: the shell login and IAM, incoming orders read
-  from `visibility.shipments` (shipping) instead of sample data, and a
-  `treasury` schema for forwards and USD account balances.
-- Generalise AUD/USD to **AUD / GBP / EUR** with a currency switcher, spot from
-  the keyless Frankfurter (ECB) feed.
+Increment 3, part 1 (done): incoming USD requirements are read from the shipping
+app. `fetchIncomingFromShipping` reads `visibility.shipments`
+(`fob_value_usd` due around `eta_current`) and the dashboard shows an "Incoming
+USD from shipping, by week ETA" demand-curve section (`lib/incoming`, tested).
+
+Increment 3, part 2 (done): the spot section is **multi-currency**. A currency
+switcher (`components/CurrencySpot`) swaps the pair shown between AUD/USD,
+GBP/USD and EUR/USD, each quoted USD per unit.
+
+Still to come:
+
+- **Shared shell login and IAM gate.** The app has no login yet; adding the
+  shared `LoginForm` and a session gate needs the pages moved under an `(app)`
+  route group (which shifts their relative imports), so it is a clean follow-on
+  rather than a rushed change.
+- **Funding-currency allocation.** Which of AUD/GBP/EUR settles each incoming
+  order is an open decision (SPEC section 8). Until it is set, incoming orders
+  are counted as USD (correct in total) and the currency switcher drives the
+  spot view. A `treasury` schema for forwards/USD accounts is only needed if the
+  app's existing `forward_orders` and `usd_cash_balances` tables are not reused.
 
 ## Local setup
 

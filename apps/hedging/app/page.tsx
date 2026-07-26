@@ -3,7 +3,7 @@ import { KpiCard } from '../components/KpiCard';
 import { ScenarioSwitcher } from '../components/ScenarioSwitcher';
 import { CoveragePairTable } from '../components/CoveragePairTable';
 import { RateChart } from '../components/RateChart';
-import { SpotChartPanel } from '../components/SpotChartPanel';
+import { CurrencySpot } from '../components/CurrencySpot';
 import { IncomingByWeek } from '../components/IncomingByWeek';
 import { groupByIsoWeek } from '../lib/incoming';
 import { isSupabaseConfigured } from '../lib/supabase/server';
@@ -66,7 +66,7 @@ export default async function DashboardPage({
           <code>supabase/migrations</code>.
         </p>
         <h2 className="section-title">Live spot and projection</h2>
-        <SpotChartPanel pair="AUD/USD" base="AUD" />
+        <CurrencySpot />
       </main>
     );
   }
@@ -165,7 +165,7 @@ export default async function DashboardPage({
       <IncomingByWeek buckets={incomingWeeks} />
 
       <h2 className="section-title">Live spot and projection</h2>
-      <SpotChartPanel pair="AUD/USD" base="AUD" />
+      <CurrencySpot />
 
       <h2 className="section-title">{CHART_PAIR} spot, predictions and forwards</h2>
       {chartRates ? (
