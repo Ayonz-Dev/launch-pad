@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSourcingSupabaseServer } from "@/lib/supabase";
+import { getSourcingSupabaseServer } from "@/lib/sourcing-supabase";
 import { fetchMondayBoard } from "./client";
 import {
   MONDAY_BOARD_IDS,

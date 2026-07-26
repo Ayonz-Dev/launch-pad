@@ -120,10 +120,14 @@ org id. It was ported into `apps/shipping` and inverted to per-user auth.
 - Its bespoke left sidebar was replaced by the shared `AppShell` top nav, per
   the chosen approach, so it frames like the other apps. Its Tailwind content
   styling is kept.
-- The incomplete Monday.com catalogue sync on the source branch
-  (`src/lib/monday`, `scripts`) is isolated from the web app and was excluded
-  from the build rather than ported. It can be finished later without touching
-  the app.
+- The Monday.com catalogue sync (`src/lib/monday`, `scripts/monday`) is wired in
+  as a background CLI job, not part of the web app. It uses a service-role
+  client in `src/lib/sourcing-supabase.ts`, deliberately kept out of
+  `lib/supabase.ts` so it carries no `next/headers` dependency and runs under
+  plain `tsx`. The missing `getSourcingSupabaseServer` (referenced but never
+  defined on the source branch) is provided there. Its catalogue tables are in
+  `supabase/migrations/0002_sourcing_catalog.sql`. Nothing in the browser bundle
+  imports it, so it does not affect the web build.
 
 ### Known inconsistency to resolve
 

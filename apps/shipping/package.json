@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:monday-mapping": "npx tsx --test src/lib/monday/mapping.test.ts",
+    "catalog:sync:monday": "npx tsx scripts/monday/run-sync.ts"
   },
   "dependencies": {
     "@launchpad/auth": "*",

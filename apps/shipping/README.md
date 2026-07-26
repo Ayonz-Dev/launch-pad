@@ -45,11 +45,40 @@ memberships, roles, permissions), which is created by the costing platform's
 initial migration on the same project. Apply it to the shared project; do not
 create a second copy of the IAM tables.
 
-## Not ported
+## Monday catalogue sync
 
-The Monday.com catalogue sync on the source branch (`src/lib/monday`, `scripts`)
-was incomplete and is isolated from the web app. It is excluded from the build
-and can be finished later without touching the app.
+A background pipeline that mirrors the Monday.com product catalogue (artwork and
+social-media boards) into the shared project's `sourcing_catalog_*` and
+`monday_*` tables. It is a machine job, not part of the web app: it runs from a
+CLI under `tsx`, uses a service-role client (`getSourcingSupabaseServer` in
+`src/lib/sourcing-supabase.ts`, kept free of `next/headers` so it needs no Next
+request context), and nothing in the browser bundle imports it.
+
+Run it:
+
+```bash
+# dry run: fetch and map, report what would change, write nothing
+npm run catalog:sync:monday --workspace @launchpad/shipping -- --dry-run
+
+# real run: upsert into Supabase
+npm run catalog:sync:monday --workspace @launchpad/shipping
+
+# unit test the board-to-catalogue mapping
+npm run test:monday-mapping --workspace @launchpad/shipping
+```
+
+Environment (see `.env.local.example`):
+
+- `MONDAY_API_TOKEN` - Monday.com API token (server only).
+- `MONDAY_ARTWORK_BOARD_ID`, `MONDAY_COMPLETED_ARTWORK_BOARD_ID`,
+  `MONDAY_SOCIAL_MEDIA_BOARD_ID` - board ids (sensible defaults are built in).
+- `SOURCING_SUPABASE_URL` and `SOURCING_SUPABASE_SERVICE_ROLE_KEY` - target
+  project and key. Default to the main `NEXT_PUBLIC_SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` when unset.
+- Optional: `MONDAY_SYNC_CONCURRENCY`, `MONDAY_API_VERSION`, `SOURCING_DB_SCHEMA`.
+
+The catalogue tables it writes to are defined in
+`supabase/migrations/0002_sourcing_catalog.sql`.
 
 ## Local setup
 

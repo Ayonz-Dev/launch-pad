@@ -27,8 +27,6 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/lib/monday",
-    "scripts"
+    "node_modules"
   ]
 }
