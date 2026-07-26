@@ -258,3 +258,42 @@ export async function fetchRateAssumptions(): Promise<Record<string, number>> {
   }
   return map;
 }
+
+// Incoming USD requirements sourced from the shipping app (visibility.shipments)
+// instead of manually-entered exposures. Each shipment's fob_value_usd is the
+// USD payable, due around its eta_current. Read through the same shared Supabase
+// client, pointed at the visibility schema. Returns [] if the schema or table is
+// not present (for example running against a project without shipping applied).
+//
+// Funding-currency allocation (which of AUD/GBP/EUR settles each order) is an
+// open decision (SPEC.md section 8). Until it is settled, every order is quoted
+// AUD/USD; the total incoming USD is currency-agnostic and correct regardless.
+export async function fetchIncomingFromShipping(): Promise<IncomingOrder[]> {
+  const client = getServerClient();
+  if (!client) return [];
+  try {
+    const { data, error } = await client
+      .schema('visibility')
+      .from('shipments')
+      .select('id, reference, po, container_no, fob_value_usd, eta_current')
+      .not('fob_value_usd', 'is', null)
+      .not('eta_current', 'is', null)
+      .order('eta_current', { ascending: true });
+    if (error) return [];
+    return (data ?? [])
+      .map((row) => ({
+        id: String((row as Record<string, unknown>).id),
+        label:
+          ((row as Record<string, unknown>).reference as string) ||
+          ((row as Record<string, unknown>).po as string) ||
+          ((row as Record<string, unknown>).container_no as string) ||
+          String((row as Record<string, unknown>).id),
+        date: (row as Record<string, unknown>).eta_current as string,
+        pair: 'AUD/USD',
+        amountUsd: num((row as Record<string, unknown>).fob_value_usd),
+      }))
+      .filter((o) => o.amountUsd > 0);
+  } catch {
+    return [];
+  }
+}

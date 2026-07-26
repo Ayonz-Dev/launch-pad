@@ -4,6 +4,8 @@ import { ScenarioSwitcher } from '../components/ScenarioSwitcher';
 import { CoveragePairTable } from '../components/CoveragePairTable';
 import { RateChart } from '../components/RateChart';
 import { SpotChartPanel } from '../components/SpotChartPanel';
+import { IncomingByWeek } from '../components/IncomingByWeek';
+import { groupByIsoWeek } from '../lib/incoming';
 import { isSupabaseConfigured } from '../lib/supabase/server';
 import {
   fetchCash,
@@ -15,6 +17,7 @@ import {
   fetchRateAssumptions,
   fetchSpotForecasts,
   fetchBankForecastRanges,
+  fetchIncomingFromShipping,
 } from '../lib/supabase/queries';
 import {
   rollupCoverage,
@@ -90,6 +93,10 @@ export default async function DashboardPage({
     fetchRateAssumptions(),
   ]);
 
+  // Incoming USD requirements sourced from the shipping app (visibility.shipments).
+  const incoming = await fetchIncomingFromShipping();
+  const incomingWeeks = groupByIsoWeek(incoming);
+
   const rollup = rollupCoverage(coverage);
   const cashUsd = totalCashUsd(cash);
   const buffer = bufferCoverageRatio(cashUsd, rollup.unhedgedPayableUsd);
@@ -153,6 +160,9 @@ export default async function DashboardPage({
           }
         />
       </section>
+
+      <h2 className="section-title">Incoming USD from shipping, by week ETA</h2>
+      <IncomingByWeek buckets={incomingWeeks} />
 
       <h2 className="section-title">Live spot and projection</h2>
       <SpotChartPanel pair="AUD/USD" base="AUD" />
