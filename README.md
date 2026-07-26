@@ -18,6 +18,7 @@ launch-pad/
   apps/
     costing/          # Product costing and five-step MYOB approval chain
     hedging/          # FX hedging (placeholder on the shared shell, to be ported)
+    shipping/         # Shipment visibility control tower (ported, per-user auth + RLS)
   packages/
     db/               # Supabase browser/server clients, DB types, SQL migrations
     auth/             # Shared identity: roles, permissions, approval chain, guards
@@ -47,6 +48,16 @@ A placeholder app that proves the shared shell end to end: it signs in through
 `@launchpad/shell`, is framed by the shared `AppShell`, and reads the same
 identity as costing. Content is blank until the real Hedging-Tool logic is
 ported in. See `apps/hedging/README.md`.
+
+### `apps/shipping`
+
+Ayonz Control Tower: factory-to-retailer shipment visibility with
+commercial-risk surfacing (AIS vessel tracking, ocean feed normalisation, xlsx
+import). Ported from the standalone shipment-visibility app and converted from a
+service-role dashboard to per-user auth: reads and user writes now run through
+the signed-in session so the visibility schema's IAM row-level security applies,
+and only the machine ingest endpoint keeps a service-role key (behind a shared
+secret). See `apps/shipping/README.md`.
 
 ## Packages
 

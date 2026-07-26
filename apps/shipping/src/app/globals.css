@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --acid: #37e5a5;
+  --shell-ink: #edf6f0;
+  --shell-muted: #85948d;
+  --shell-line: rgba(213, 233, 221, 0.12);
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+/* Tabular figures for all numeric data — ETAs, costs, quantities line up. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Crossrate-inspired mono eyebrow / section labels */
+.kicker {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.kicker-accent {
+  color: var(--acid);
+}
+
+/* Terminal-style panel with acid corner brackets (Crossrate "terminal") */
+.panel-frame {
+  position: relative;
+  border: 1px solid rgb(226 232 240);
+  background: #fff;
+  border-radius: 0.75rem;
+}
+
+.panel-frame::before,
+.panel-frame::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.panel-frame::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid var(--acid);
+  border-left: 1px solid var(--acid);
+}
+
+.panel-frame::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid var(--acid);
+  border-bottom: 1px solid var(--acid);
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--acid);
+  box-shadow: 0 0 10px var(--acid);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .live-dot {
+    animation: none;
+  }
+}

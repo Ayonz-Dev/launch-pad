@@ -10,9 +10,11 @@
   "scripts": {
     "dev:costing": "npm run dev --workspace @launchpad/costing",
     "dev:hedging": "npm run dev --workspace @launchpad/hedging",
+    "dev:shipping": "npm run dev --workspace @launchpad/shipping",
     "build": "npm run build --workspaces --if-present",
     "build:costing": "npm run build --workspace @launchpad/costing",
     "build:hedging": "npm run build --workspace @launchpad/hedging",
+    "build:shipping": "npm run build --workspace @launchpad/shipping",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   },

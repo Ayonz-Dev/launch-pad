@@ -97,6 +97,46 @@ living in each app.
   derives its own menu from the user's role while sharing the frame. The role
   logic still lives in `@launchpad/auth` (D3).
 
+## D7. Shipping ported onto per-user auth, not service role
+
+The shipment visibility app arrived as a standalone internal dashboard that read
+with the Supabase service-role key (bypassing RLS) and scoped by an environment
+org id. It was ported into `apps/shipping` and inverted to per-user auth.
+
+- Reads and user-initiated writes now run through the signed-in session
+  (`getSupabaseServer` builds a cookie-based `@supabase/ssr` client). The
+  `visibility` schema already ships complete IAM row-level security
+  (`iam_private.authorized('visibility', ...)`), so authorisation is the
+  database's job; the app just needs a session. The env-based org filter on
+  reads is therefore redundant and was dropped.
+- The one exception is the machine ingest endpoint (`/api/ingest`), which n8n or
+  a carrier push calls with a shared secret and which has no user session to run
+  as. It keeps a service-role client (`getSupabaseServiceRole`). This is the
+  correct split: humans go through RLS, machines go through a secret.
+- The app authorises through IAM, not the costing `profiles.role` model, so it
+  gates on session presence (`requireSession` from the shell) and lets RLS
+  decide the rest. `requireSession` was added to the shell for exactly this
+  case: apps that carry their own authorisation model.
+- Its bespoke left sidebar was replaced by the shared `AppShell` top nav, per
+  the chosen approach, so it frames like the other apps. Its Tailwind content
+  styling is kept.
+- The incomplete Monday.com catalogue sync on the source branch
+  (`src/lib/monday`, `scripts`) is isolated from the web app and was excluded
+  from the build rather than ported. It can be finished later without touching
+  the app.
+
+### Known inconsistency to resolve
+
+`apps/shipping` targets the real shared Supabase project, which uses a rich
+**IAM schema** (organisations, memberships, applications, roles, permissions,
+`iam_private.authorized`). But `packages/db` migrations (0001-0004) and
+`apps/costing` were built from the simpler `ayonz_costing_schema.sql` brief
+(a flat `profiles.role`). These are two different costing worlds. The shell's
+`requireUser` (profiles-based) works for the costing app as written but does not
+match the IAM project; `requireSession` sidesteps that for shipping. Before
+costing runs against the real IAM project, `packages/db` and `@launchpad/auth`
+need reconciling with the IAM model. Flagged here, not silently bridged.
+
 ## Open questions (do not resolve unilaterally)
 
 - Whether roles stay single-per-person (`profiles.role`) or become per-app once
