@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabaseServer, requireVisibilityOrganizationId } from "@/lib/supabase";
 import { shipmentToInsertRow } from "@/lib/data";
 import type { Shipment } from "@/lib/types";
+
+function isVisibilitySchema(): boolean {
+  return (process.env.SUPABASE_DB_SCHEMA?.trim() || "public") === "visibility";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +84,41 @@ export async function POST(req: Request) {
     upserted += count ?? 0;
   }
 
+  // AGL override: AGL is the batch tracking key, so a re-upload replaces the
+  // previous entry for every AGL it carries. We've just upserted the current
+  // legs; now delete any earlier leg of those same AGLs that isn't in this
+  // upload (a container consolidated away, an ETD changed the id, etc.). AGLs
+  // not present in this file are left untouched. Best-effort: the new data is
+  // already persisted, so a prune failure never loses the upload.
+  const incomingAgls = [
+    ...new Set(rows.flatMap((r) => (r.agls as string[] | undefined) ?? [])),
+  ];
+  const newIds = new Set(rows.map((r) => r.id as string));
+  let pruned = 0;
+  if (incomingAgls.length) {
+    try {
+      let query = supabase.from("shipments").select("id").overlaps("agls", incomingAgls);
+      if (isVisibilitySchema()) {
+        query = query.eq("organization_id", requireVisibilityOrganizationId());
+      }
+      const { data: existing, error: existingError } = await query;
+      if (!existingError && existing) {
+        const staleIds = (existing as { id: string }[])
+          .map((e) => e.id)
+          .filter((id) => !newIds.has(id));
+        if (staleIds.length) {
+          const { error: deleteError } = await supabase
+            .from("shipments")
+            .delete()
+            .in("id", staleIds);
+          if (!deleteError) pruned = staleIds.length;
+        }
+      }
+    } catch {
+      // Prune is best-effort; the upsert above already landed the new data.
+    }
+  }
+
   // Don't trust upsert count alone — RLS/grants can report success with 0 rows.
   const sampleIds = rows.slice(0, 5).map((r) => r.id as string);
   const { data: verifyRows, error: verifyError, count: verifyCount } = await supabase
@@ -109,6 +148,7 @@ export async function POST(req: Request) {
     ok: true,
     persisted: rows.length,
     upserted,
+    pruned,
     verifiedSample: found,
     // verifyCount is only for the sample ids, not the full table
     sampleReadable: verifyCount ?? found,

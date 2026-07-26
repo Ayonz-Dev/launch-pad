@@ -9,6 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:monday-mapping": "npx tsx --test src/lib/monday/mapping.test.ts",
+    "test:import": "npx tsx --test src/lib/import/parseReport.test.ts",
     "catalog:sync:monday": "npx tsx scripts/monday/run-sync.ts"
   },
   "dependencies": {

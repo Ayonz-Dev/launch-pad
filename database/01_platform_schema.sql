@@ -588,11 +588,19 @@ create table visibility.shipments (
 
   milestones        jsonb not null default '[]'::jsonb,
 
+  -- AGL batch references carried on the shipment (tracking key), and categorised
+  -- free-form detail captured on import (ETA-change comments, transhipment notes,
+  -- retailer notes, and any other cell comment or unmapped column).
+  agls              text[] not null default '{}',
+  notes             jsonb not null default '{}'::jsonb,
+
   updated_at        timestamptz not null default now()
 );
 
 create index if not exists shipments_organization_idx
   on visibility.shipments (organization_id);
+create index if not exists shipments_agls_idx
+  on visibility.shipments using gin (agls);
 create index if not exists shipments_eta_current_idx
   on visibility.shipments (organization_id, eta_current);
 create index if not exists shipments_retailer_idx

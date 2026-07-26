@@ -35,6 +35,35 @@ function fmtDate(iso?: string): string {
   });
 }
 
+// Turn a field key ("eta", "via", "sailingDays") into a readable label.
+const FIELD_LABELS: Record<string, string> = {
+  eta: "ETA",
+  via: "Transhipment",
+  status: "Status",
+  etd: "ETD",
+  vessel: "Vessel",
+  pod: "Destination",
+  pol: "Origin",
+  forwarder: "Forwarder",
+  sailingDays: "Sailing days",
+  deliveryParty: "Delivery party",
+};
+function fieldLabel(field: string): string {
+  return FIELD_LABELS[field] ?? field;
+}
+
+function hasCapturedDetail(s: {
+  notes?: { comments?: unknown[]; lineNotes?: unknown[]; extras?: Record<string, string> };
+}): boolean {
+  const n = s.notes;
+  if (!n) return false;
+  return Boolean(
+    (n.comments && n.comments.length) ||
+      (n.lineNotes && n.lineNotes.length) ||
+      (n.extras && Object.keys(n.extras).length),
+  );
+}
+
 export default async function ShipmentDetail({
   params,
 }: {
@@ -73,6 +102,11 @@ export default async function ShipmentDetail({
           {s.etaSlipDays > 0 && (
             <div className="text-xs text-delayed">
               +{s.etaSlipDays}d vs plan ({fmtDate(s.etaOriginal)})
+            </div>
+          )}
+          {s.etaNote && (
+            <div className="mt-1 max-w-xs text-xs text-slate-500">
+              ETA note: {s.etaNote}
             </div>
           )}
         </div>
@@ -216,6 +250,16 @@ export default async function ShipmentDetail({
                           {sku.qty.toLocaleString("en-AU")}
                         </dd>
                       </div>
+                      {(sku.sparePart || sku.spareUnit != null) && (
+                        <div className="flex justify-between gap-3">
+                          <dt className="text-slate-500">Spare</dt>
+                          <dd className="tnum text-ink">
+                            {[sku.sparePart, sku.spareUnit != null ? `${sku.spareUnit} units` : null]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </dd>
+                        </div>
+                      )}
                     </dl>
                   </li>
                 );
@@ -231,6 +275,70 @@ export default async function ShipmentDetail({
         </h2>
         <MilestoneTimeline shipment={s} />
       </div>
+
+      {hasCapturedDetail(s) && (
+        <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-3 font-display text-sm font-semibold text-ink">
+            Notes and captured detail
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {s.notes?.comments && s.notes.comments.length > 0 && (
+              <div>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Cell comments
+                </h3>
+                <ul className="mt-1.5 space-y-1.5 text-sm">
+                  {s.notes.comments.map((c, i) => (
+                    <li key={i} className="text-ink">
+                      <span className="text-slate-500">{fieldLabel(c.field)}:</span>{" "}
+                      {c.text}
+                      {c.author ? (
+                        <span className="text-slate-400"> — {c.author}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {s.notes?.lineNotes && s.notes.lineNotes.length > 0 && (
+              <div>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Line notes
+                </h3>
+                <ul className="mt-1.5 space-y-1.5 text-sm text-ink">
+                  {s.notes.lineNotes.map((n, i) => (
+                    <li key={i}>
+                      {n.agl ? <span className="text-slate-500">{n.agl}: </span> : null}
+                      {n.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {s.notes?.extras && Object.keys(s.notes.extras).length > 0 && (
+              <div>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Other
+                </h3>
+                <dl className="mt-1.5 space-y-1 text-sm">
+                  {s.transport && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-slate-500">Transport</dt>
+                      <dd className="text-ink">{s.transport}</dd>
+                    </div>
+                  )}
+                  {Object.entries(s.notes.extras).map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-3">
+                      <dt className="text-slate-500">{fieldLabel(k)}</dt>
+                      <dd className="text-ink">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { parseReport, type ParseResult } from "@/lib/import/parseReport";
+import {
+  parseReport,
+  mergeParseResults,
+  type ParseResult,
+  type CommentLookup,
+} from "@/lib/import/parseReport";
 
 type ImportState =
   | { phase: "idle" }
@@ -11,6 +16,48 @@ type ImportState =
   | { phase: "parsed"; fileName: string; result: ParseResult }
   | { phase: "importing"; fileName: string; result: ParseResult }
   | { phase: "done"; fileName: string; result: ParseResult; message: string; ok: boolean };
+
+// The real used range of a sheet, anchored at A1 so a row's array index still
+// equals its 0-based sheet row (needed for comment alignment). Sheets often
+// declare a far larger range than they populate; we scan the actual cells for
+// the true last row/column and cap the declared range to it.
+function usedRange(ws: XLSX.WorkSheet): XLSX.Range | null {
+  const declared = ws["!ref"];
+  if (!declared) return null;
+  const range = XLSX.utils.decode_range(declared);
+  let maxR = 0;
+  let maxC = 0;
+  for (const addr in ws) {
+    if (addr[0] === "!") continue;
+    const { r, c } = XLSX.utils.decode_cell(addr);
+    if (r > maxR) maxR = r;
+    if (c > maxC) maxC = c;
+  }
+  return {
+    s: { r: 0, c: 0 },
+    e: { r: Math.min(range.e.r, maxR), c: Math.min(range.e.c, maxC) },
+  };
+}
+
+// Build a row/col comment lookup from a worksheet. SheetJS attaches cell
+// comments (including threaded ones, which is where the ETA-change notes live)
+// to `cell.c` as `[{ a: author, t: text }]`. Keyed by "row,col" (0-based).
+function buildCommentLookup(ws: XLSX.WorkSheet): CommentLookup {
+  const map = new Map<string, { text: string; author?: string }>();
+  for (const addr in ws) {
+    if (addr[0] === "!") continue;
+    const cell = (ws as Record<string, any>)[addr];
+    if (!cell || !cell.c || !cell.c.length) continue;
+    const { r, c } = XLSX.utils.decode_cell(addr);
+    const text = cell.c
+      .map((cm: any) => String(cm.t ?? "").trim())
+      .filter(Boolean)
+      .join("\n");
+    const author = cell.c.find((cm: any) => cm.a)?.a;
+    if (text) map.set(`${r},${c}`, { text, author });
+  }
+  return (row: number, col: number) => map.get(`${row},${col}`);
+}
 
 function fmtUsd(n?: number): string {
   if (n == null) return "—";
@@ -35,24 +82,57 @@ export default function ImportPage() {
     try {
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { cellDates: true });
-      // Pick the sheet whose header row mentions a container column.
-      const sheetName =
-        wb.SheetNames.find((n) => {
-          const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[n], {
-            header: 1,
-            blankrows: false,
-          });
-          return rows
-            .slice(0, 10)
-            .some((r) => (r || []).some((c) => String(c).toLowerCase().includes("container")));
-        }) ?? wb.SheetNames[0];
-
-      const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sheetName], {
-        header: 1,
-        blankrows: false,
-      });
       const today = new Date().toISOString().slice(0, 10);
-      const result = parseReport(rows, today);
+
+      // A workbook can hold several shipment sheets (the outside-AU file has one
+      // per country). Parse every sheet that looks like a shipment report and
+      // merge, de-duplicating shipments that appear on more than one sheet.
+      const results: ParseResult[] = [];
+      for (const name of wb.SheetNames) {
+        const ws = wb.Sheets[name];
+        if (!ws) continue;
+        // Some sheets declare a bloated range (a million empty rows). Bound to
+        // the real last populated cell first, so blankrows:true doesn't build a
+        // giant array. blankrows:true keeps the array index aligned with the
+        // sheet's 0-based row, so cell comments (looked up by row/col) line up.
+        const range = usedRange(ws);
+        const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+          header: 1,
+          blankrows: true,
+          ...(range ? { range } : {}),
+        });
+        // Skip sheets that clearly aren't shipment reports (no AGL/container
+        // header in the first rows, or no data), to keep warnings clean.
+        const looksLikeReport = rows
+          .slice(0, 10)
+          .some((r) =>
+            (r || []).some((c) => {
+              const s = String(c ?? "").toLowerCase();
+              return s.includes("container") || s.startsWith("agl");
+            }),
+          );
+        if (!looksLikeReport) continue;
+
+        const commentAt = buildCommentLookup(ws);
+        const res = parseReport(rows, today, commentAt);
+        if (res.shipments.length > 0) results.push(res);
+      }
+
+      let result: ParseResult;
+      if (results.length) {
+        result = mergeParseResults(results);
+      } else {
+        const ws0 = wb.Sheets[wb.SheetNames[0]];
+        const range0 = usedRange(ws0);
+        result = parseReport(
+          XLSX.utils.sheet_to_json<unknown[]>(ws0, {
+            header: 1,
+            blankrows: true,
+            ...(range0 ? { range: range0 } : {}),
+          }),
+          today,
+        );
+      }
       setState({ phase: "parsed", fileName: file.name, result });
     } catch (err: any) {
       setState({

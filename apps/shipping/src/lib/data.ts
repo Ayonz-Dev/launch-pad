@@ -40,8 +40,21 @@ export function rowToShipment(row: any): Shipment {
     salesReps: row.sales_reps ?? undefined,
     etdStatus: row.etd_status ?? undefined,
     source: row.source ?? undefined,
+    agls: row.agls ?? undefined,
+    transport: row.notes?.transport ?? undefined,
+    etaNote: row.notes?.etaNote ?? undefined,
+    notes: stripNotesMeta(row.notes),
     milestones: row.milestones ?? [],
   };
+}
+
+// notes jsonb holds the categorised ShipmentNotes plus two convenience keys
+// (transport, etaNote) that also live as their own domain fields. Split them
+// back out on read so the domain object matches its type.
+function stripNotesMeta(raw: any): Shipment["notes"] {
+  if (!raw || typeof raw !== "object") return undefined;
+  const { transport, etaNote, ...rest } = raw;
+  return Object.keys(rest).length ? rest : undefined;
 }
 
 // Inverse of rowToShipment — used by the import route to upsert into Supabase.
@@ -84,10 +97,26 @@ export function shipmentToRow(
   return row;
 }
 
-/** Full upsert row — includes organization_id only for the visibility schema. */
+// Pack the categorised notes plus the transport/etaNote convenience keys into
+// the single notes jsonb column.
+function buildNotesColumn(s: Shipment): Record<string, unknown> {
+  const notes: Record<string, unknown> = { ...(s.notes ?? {}) };
+  if (s.transport) notes.transport = s.transport;
+  if (s.etaNote) notes.etaNote = s.etaNote;
+  return notes;
+}
+
+/**
+ * Full upsert row. The visibility schema carries organization_id and the two
+ * extra columns (agls, notes); the legacy public schema has neither, so we only
+ * attach them when writing to visibility.
+ */
 export function shipmentToInsertRow(s: Shipment): Record<string, unknown> {
   if (dbSchema() === "visibility") {
-    return shipmentToRow(s, requireVisibilityOrganizationId());
+    const row = shipmentToRow(s, requireVisibilityOrganizationId());
+    row.agls = s.agls ?? [];
+    row.notes = buildNotesColumn(s);
+    return row;
   }
   return shipmentToRow(s);
 }

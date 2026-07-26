@@ -31,6 +31,45 @@ export interface Sku {
   unitPrice?: number;
   lineTotal?: number;
   salesRep?: string; // owning salesperson — drives the sales-team view
+
+  // --- extra line columns pulled off the report, kept per line ---
+  sparePart?: string; // "Spare part" / "Spare"
+  spareUnit?: number; // "Spare unit"
+  cartons?: number; // "Carton" / "Packages" count
+  cbm?: number; // cubic metres for the line
+  ratio?: number; // container-fill ratio
+  barcode?: string; // sheet-2 "Barcode"
+  warehouse?: string; // sheet-2 "Warehouse"
+  aolPo?: string; // sheet-2 "AOL PO"
+  note?: string; // free text from the unnamed notes column, for this line
+  // Any other column we didn't map, keyed by its (trimmed) header label.
+  extras?: Record<string, string>;
+}
+
+// A comment sitting on a specific cell of the report, categorised by the column
+// it annotated. ETA comments are the delay reasons ("Delay 2 days"); Via
+// comments are transhipment notes; others are kept verbatim under their field.
+export interface CellComment {
+  field: string; // eta | via | status | vessel | etd | pod | ... (our field key)
+  text: string;
+  author?: string;
+  agl?: string; // AGL on the annotated row, when known
+  model?: string;
+}
+
+// A free-text note from the unnamed notes column, tied to a line where possible.
+export interface LineNote {
+  text: string;
+  agl?: string;
+  model?: string;
+}
+
+// Everything the report carries that has no dedicated column, categorised so it
+// can be read back without re-parsing the sheet. Stored in shipments.notes.
+export interface ShipmentNotes {
+  comments?: CellComment[]; // cell comments, grouped implicitly by field
+  lineNotes?: LineNote[]; // unnamed notes column, per line
+  extras?: Record<string, string>; // shipment-level unmapped columns (forwarder, delivery party, ...)
 }
 
 export interface Shipment {
@@ -72,6 +111,12 @@ export interface Shipment {
   salesReps?: string[]; // distinct reps with a line on this container
   etdStatus?: string; // ARRIVED | ON WATER | …
   source?: "feed" | "report" | "manual";
+
+  // --- captured across both report variants ---
+  agls?: string[]; // AGL batch references on this shipment (the tracking key)
+  transport?: string; // SEA | TRAIN | AIR (outside-AU variant)
+  etaNote?: string; // most salient ETA-change comment, surfaced for quick display
+  notes?: ShipmentNotes; // categorised catch-all for everything else on the sheet
 
   milestones: Milestone[];
 }

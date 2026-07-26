@@ -63,6 +63,16 @@ views (`v_hedge_coverage_monthly`, `v_cash_latest`, `v_exposure_signed`,
 It is independent of the platform schema, but `apps/hedging` reads incoming
 orders from `visibility.shipments`, so apply `01` first if you want that link.
 
+## 3. `04_shipment_extras.sql` (run on the live project)
+
+Adds two columns to `visibility.shipments` that the richer report import needs:
+`agls` (the AGL batch references on a shipment, the tracking key the import
+prunes by so a re-upload overrides the previous entry for each AGL) and `notes`
+(categorised free-form detail with no dedicated column: ETA-change comments,
+transhipment notes, retailer notes, and any other cell comment or unmapped
+column). Idempotent, so safe to run and re-run. Fresh projects get these from
+`01` already; run `04` only on a project stood up before this change.
+
 ## After both
 
 ```sql
