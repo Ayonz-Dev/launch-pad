@@ -2,8 +2,22 @@
 // Australian English. No em dashes.
 
 export { createBrowserSupabase } from './client';
-export { createServerSupabase } from './server';
+export { createServerSupabase, createIamServerSupabase } from './server';
 export type { CookieAdapter, CookieSetOptions } from './server';
+
+export type {
+  IamDatabase,
+  ApplicationKey,
+  MembershipStatus,
+  IamApplication,
+  IamOrganization,
+  IamUserProfile,
+  IamMembership,
+  IamRole,
+  IamPermission,
+  IamRolePermission,
+  IamRoleAssignment,
+} from './iam-types';
 
 export type {
   Database,

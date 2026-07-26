@@ -129,17 +129,41 @@ org id. It was ported into `apps/shipping` and inverted to per-user auth.
   `supabase/migrations/0002_sourcing_catalog.sql`. Nothing in the browser bundle
   imports it, so it does not affect the web build.
 
-### Known inconsistency to resolve
+## D8. Shared identity reconciled onto the IAM model
 
-`apps/shipping` targets the real shared Supabase project, which uses a rich
-**IAM schema** (organisations, memberships, applications, roles, permissions,
-`iam_private.authorized`). But `packages/db` migrations (0001-0004) and
-`apps/costing` were built from the simpler `ayonz_costing_schema.sql` brief
-(a flat `profiles.role`). These are two different costing worlds. The shell's
-`requireUser` (profiles-based) works for the costing app as written but does not
-match the IAM project; `requireSession` sidesteps that for shipping. Before
-costing runs against the real IAM project, `packages/db` and `@launchpad/auth`
-need reconciling with the IAM model. Flagged here, not silently bridged.
+The inconsistency flagged under D7 (the shared packages modelled a flat
+`profiles.role`, but the real shared project uses a rich IAM schema) is now
+resolved in the shared layer.
+
+- `packages/db/migrations/0001_iam_and_costing_platform.sql` is the shared
+  schema of record: the real `iam` schema (organisations, memberships,
+  applications, roles, permissions, role assignments, `iam_private.authorized`)
+  plus the real `costing` domain. The prototype's flat schema moved to
+  `apps/costing/supabase/migrations`, where it belongs.
+- `packages/db` gained `IamDatabase` types and `createIamServerSupabase`, an
+  iam-schema per-user client.
+- `@launchpad/auth` gained `iam.ts`: `loadIamUser` reads the signed-in user's
+  own IAM rows (which the IAM RLS permits) and computes their effective
+  permissions per application and organisation, mirroring
+  `iam_private.authorized` in TypeScript. `authorized()` / `permissionsFor()`
+  gate UI without a privileged call; the database RLS still enforces the truth
+  on every query.
+- `@launchpad/shell` gained `requireIamUser` (and `getIamServerSupabase`).
+  `apps/shipping` now uses it in Supabase mode to hide the write-only nav
+  (Import, Manage) from users without `shipments.write`, proving the reconciled
+  layer against the real schema it targets. In mock mode it stays auth-free so
+  the no-keys dev experience is intact.
+
+### What is deliberately NOT reconciled yet
+
+`apps/costing` is still the prototype built from `ayonz_costing_schema.sql`
+(flat `profiles.role`, five-step chain, `costings` + `costing_computed`). The
+real platform models costing differently (the `costing` schema: quotes with a
+sales / manager / ceo approval model). The prototype keeps its own local schema
+and the profiles-based helpers (`@launchpad/auth` still exports `roles.ts` /
+`guards.ts` for it), so it keeps working unchanged. Replacing it with the real
+Costing Platform on the IAM model is the next migration, and a larger one than
+this reconciliation.
 
 ## Open questions (do not resolve unilaterally)
 

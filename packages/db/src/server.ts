@@ -9,6 +9,7 @@
 
 import { createServerClient } from '@supabase/ssr';
 import type { Database } from './types';
+import type { IamDatabase } from './iam-types';
 
 // The subset of the @supabase/ssr cookie interface we rely on. Matches the
 // Next.js cookies() store closely enough to pass it straight through.
@@ -41,6 +42,35 @@ export function createServerSupabase(cookies: CookieAdapter) {
   }
 
   return createServerClient<Database>(url, anonKey, {
+    cookies: {
+      getAll: () => cookies.getAll(),
+      setAll: (
+        cookiesToSet: {
+          name: string;
+          value: string;
+          options?: CookieSetOptions;
+        }[],
+      ) => cookies.setAll(cookiesToSet),
+    },
+  });
+}
+
+// Per-user client scoped to the iam schema, for reading the signed-in user's
+// identity and role assignments. Same session cookies as createServerSupabase,
+// so it runs as that person and the IAM RLS applies.
+export function createIamServerSupabase(cookies: CookieAdapter) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. ' +
+        'Copy .env.local.example to .env.local and fill in the Supabase keys.',
+    );
+  }
+
+  return createServerClient<IamDatabase, 'iam'>(url, anonKey, {
+    db: { schema: 'iam' },
     cookies: {
       getAll: () => cookies.getAll(),
       setAll: (

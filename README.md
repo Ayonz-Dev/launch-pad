@@ -64,17 +64,25 @@ secret). See `apps/shipping/README.md`.
 ### `@launchpad/db`
 
 - `client.ts` - `createBrowserClient` from `@supabase/ssr`.
-- `server.ts` - `createServerClient` wired to Next cookies.
-- `types.ts` - database types (regenerate with the Supabase CLI after schema
-  changes).
-- `migrations/` - ordered SQL. Apply in filename order to the Supabase project.
+- `server.ts` - `createServerClient` wired to Next cookies, plus
+  `createIamServerSupabase` (an iam-schema per-user client).
+- `types.ts` / `iam-types.ts` - database types. `iam-types.ts` models the shared
+  IAM schema (organisations, memberships, applications, roles, permissions,
+  assignments).
+- `migrations/` - the shared schema of record:
+  `0001_iam_and_costing_platform.sql` is the real `iam` + `costing` schema. (The
+  prototype costing app's own flat schema lives in
+  `apps/costing/supabase/migrations`.)
 
 ### `@launchpad/auth`
 
-- `roles.ts` - the role enum, human labels, the costing approval chain and a
-  small permission model. No business rule about a role lives in app code; it
-  lives here as data.
-- `guards.ts` - `loadSessionUser` / `hasRole` helpers for server components.
+- `iam.ts` - the canonical shared identity: `loadIamUser` loads a signed-in
+  user's organisations, role assignments and computed permissions, and
+  `authorized()` / `permissionsFor()` mirror the database `iam_private.authorized`
+  in TypeScript for UI gating. App and permission keys are constants here.
+- `roles.ts` / `guards.ts` - the prototype costing app's flat `profiles.role`
+  model and profiles-based guards. Kept for `apps/costing` until it is migrated
+  onto IAM; not the shared identity.
 
 ### `@launchpad/shell`
 
@@ -84,8 +92,9 @@ The shared login shell, so every app signs in and frames itself the same way.
   by brand and redirect target.
 - `AppShell` - the authenticated chrome (brand, nav links, identity, sign out).
   Each app passes its own role-derived links; the chrome is shared.
-- `server.ts` - `getServerSupabase` (the Next cookies() adapter) and
-  `requireUser`, which redirects to login when there is no session.
+- `server.ts` - `getServerSupabase` (the Next cookies() adapter); `requireUser`
+  (prototype profiles model); `requireSession` (session only); and
+  `requireIamUser` / `getIamServerSupabase` for the shared IAM model.
 - `middleware.ts` - `createSessionMiddleware`, so each app's middleware is a two
   line re-export.
 

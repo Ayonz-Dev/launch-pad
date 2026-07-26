@@ -7,9 +7,9 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerSupabase } from '@launchpad/db/server';
-import type { AppSupabase, SessionUser } from '@launchpad/auth';
-import { loadSessionUser } from '@launchpad/auth';
+import { createServerSupabase, createIamServerSupabase } from '@launchpad/db/server';
+import type { AppSupabase, SessionUser, IamUser } from '@launchpad/auth';
+import { loadSessionUser, loadIamUser } from '@launchpad/auth';
 
 // Wire the shared server client to Next's cookies() store. Kept here (not in
 // @launchpad/db) because next/headers is Next only and the db package stays
@@ -56,4 +56,31 @@ export async function requireSession(
   } = await supabase.auth.getUser();
   if (!user) redirect(loginPath);
   return { id: user.id, email: user.email ?? null };
+}
+
+// The iam-scoped per-user client, wired to Next cookies. Use for reading the
+// signed-in user's IAM identity and role assignments.
+export function getIamServerSupabase() {
+  const cookieStore = cookies();
+  return createIamServerSupabase({
+    getAll: () => cookieStore.getAll(),
+    setAll: (cookiesToSet) => {
+      try {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          cookieStore.set(name, value, options),
+        );
+      } catch {
+        // Read-only cookie context; middleware handles rotation.
+      }
+    },
+  });
+}
+
+// Require a signed-in user and load their full IAM identity (organisations,
+// role assignments and computed permissions), or redirect to login. This is the
+// canonical identity guard for apps on the shared IAM model.
+export async function requireIamUser(loginPath = '/login'): Promise<IamUser> {
+  const user = await loadIamUser(getIamServerSupabase());
+  if (!user) redirect(loginPath);
+  return user;
 }
