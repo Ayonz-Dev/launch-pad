@@ -5,6 +5,27 @@ Two SQL files to apply to the shared Supabase project
 order, of the migrations under `packages/db/migrations` and
 `apps/hedging/supabase/migrations`. Australian English. No em dashes.
 
+## IMPORTANT: is this a fresh project or the live one?
+
+The live shared project (`jhhorikmpftvzlawcuty`) **already has the platform
+schema** (iam, costing, visibility, sourcing), because it is the project the
+costing platform and shipment tracker already run against. Re-running
+`01_platform_schema.sql` there fails with errors like `relation "applications"
+already exists` or `trigger "teams_set_updated_at" already exists`. That is
+expected: the objects are already present.
+
+So:
+
+- **On the existing live project:** do NOT run `01`. Run only
+  `02_hedging_schema.sql` (the FX engine, which that project does not have yet).
+  If you are missing a specific later platform migration, apply just that one
+  file from `packages/db/migrations` rather than the whole consolidation.
+- **On a brand-new project:** run `01` then `02`.
+
+`02_hedging_schema.sql` is idempotent (every create guarded with
+`if not exists` / `or replace`, the trigger dropped first, seeds use
+`on conflict do nothing`), so it is safe to run and re-run.
+
 Run them in the Supabase SQL editor (or `psql`) in this order:
 
 ## 1. `01_platform_schema.sql` (run first)

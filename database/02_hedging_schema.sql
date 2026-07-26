@@ -76,7 +76,7 @@ create table if not exists usd_cash_balances (
 -- and the per-row signed exposure view.
 
 -- Canonical pair registry. USD is the anchor, so quote_currency is always USD.
-create table currency_pairs (
+create table if not exists currency_pairs (
   pair text primary key,
   base_currency text not null,
   quote_currency text not null,
@@ -88,11 +88,12 @@ create table currency_pairs (
 insert into currency_pairs (pair, base_currency, quote_currency, is_active) values
   ('AUD/USD', 'AUD', 'USD', true),
   ('EUR/USD', 'EUR', 'USD', true),
-  ('GBP/USD', 'GBP', 'USD', true);
+  ('GBP/USD', 'GBP', 'USD', true)
+  on conflict do nothing;
 
 -- A null scenario_id everywhere else means live data. A non-null value means a
 -- sandbox what-if. This replaced the old is_sandbox boolean.
-create table scenarios (
+create table if not exists scenarios (
   id bigint generated always as identity primary key,
   name text not null,
   description text,
@@ -102,7 +103,7 @@ create table scenarios (
 -- Forecast USD cash flows: the centre of gravity for all coverage maths.
 -- amount_usd is a positive magnitude. The sign comes from direction.
 -- confidence in 0..1 drives risk-adjusted exposure.
-create table usd_exposures (
+create table if not exists usd_exposures (
   id bigint generated always as identity primary key,
   forecast_date date not null,
   pair text not null references currency_pairs (pair),
@@ -114,8 +115,8 @@ create table usd_exposures (
   created_at timestamptz not null default now()
 );
 
-create index usd_exposures_scenario_idx on usd_exposures (scenario_id);
-create index usd_exposures_pair_date_idx on usd_exposures (pair, forecast_date);
+create index if not exists usd_exposures_scenario_idx on usd_exposures (scenario_id);
+create index if not exists usd_exposures_pair_date_idx on usd_exposures (pair, forecast_date);
 
 -- Now that currency_pairs exists, enforce canonical pair strings on the
 -- historical and forecast timelines too.
@@ -126,7 +127,7 @@ alter table bank_forecasts
 
 -- Per-row signed and confidence-weighted net exposure.
 -- Payable is cash out (negative), receivable is cash in (positive).
-create view v_exposure_signed as
+create or replace view v_exposure_signed as
 select
   e.id,
   e.forecast_date,
@@ -154,9 +155,9 @@ from usd_exposures e;
 
 -- Forward orders: scenario handling, direction, and the generated local amount.
 alter table forward_orders
-  add column scenario_id bigint references scenarios (id),
-  add column buy_sell text check (buy_sell in ('buy', 'sell')),
-  add column amount_local numeric(18,2)
+  add column if not exists scenario_id bigint references scenarios (id),
+  add column if not exists buy_sell text check (buy_sell in ('buy', 'sell')),
+  add column if not exists amount_local numeric(18,2)
     generated always as (amount_usd / contract_rate) stored;
 
 -- Enforce canonical pair strings on hedges.
@@ -166,8 +167,8 @@ alter table forward_orders
 -- Cash balances: scenario handling plus an as_of_date so the safety band is a
 -- time series rather than a single snapshot.
 alter table usd_cash_balances
-  add column scenario_id bigint references scenarios (id),
-  add column as_of_date date not null default current_date;
+  add column if not exists scenario_id bigint references scenarios (id),
+  add column if not exists as_of_date date not null default current_date;
 
 -- Migrate the retired is_sandbox rows into a single Legacy Sandbox scenario.
 do $$
@@ -188,17 +189,17 @@ alter table usd_cash_balances drop column is_sandbox;
 -- Uniqueness on order_number is scoped by liveness. A live forward and its
 -- forked scenario copy share an order_number, so a plain unique index would
 -- reject the fork. Partial indexes keep one live row and one row per scenario.
-create unique index forward_orders_live_order_no
+create unique index if not exists forward_orders_live_order_no
   on forward_orders (order_number)
   where scenario_id is null;
 
-create unique index forward_orders_scenario_order_no
+create unique index if not exists forward_orders_scenario_order_no
   on forward_orders (scenario_id, order_number)
   where scenario_id is not null;
 
-create index forward_orders_scenario_idx on forward_orders (scenario_id);
-create index usd_cash_balances_scenario_idx on usd_cash_balances (scenario_id);
-create index usd_cash_balances_account_asof_idx
+create index if not exists forward_orders_scenario_idx on forward_orders (scenario_id);
+create index if not exists usd_cash_balances_scenario_idx on usd_cash_balances (scenario_id);
+create index if not exists usd_cash_balances_account_asof_idx
   on usd_cash_balances (account_name, as_of_date);
 
 
@@ -213,7 +214,7 @@ create index usd_cash_balances_account_asof_idx
 -- scenario_id. A plain equality join would treat null = null as unknown and
 -- silently drop every live bucket.
 
-create view v_hedge_coverage_monthly as
+create or replace view v_hedge_coverage_monthly as
 with exposure_m as (
   select
     date_trunc('month', forecast_date)::date as bucket_month,
@@ -271,7 +272,7 @@ full outer join forward_m f
 
 -- Most recent balance per cash account and scenario: the numerator for buffer
 -- coverage. DISTINCT ON groups NULL scenario_id (live) as a single value.
-create view v_cash_latest as
+create or replace view v_cash_latest as
 select distinct on (account_name, scenario_id)
   id,
   account_name,
@@ -292,12 +293,12 @@ order by account_name, scenario_id, as_of_date desc;
 -- a commented template.
 
 alter table forward_orders
-  add column status text not null default 'active'
+  add column if not exists status text not null default 'active'
     check (status in ('active', 'retired')),
-  add column source text not null default 'manual',
-  add column import_batch_id text,
-  add column updated_at timestamptz not null default now(),
-  add column retired_at timestamptz;
+  add column if not exists source text not null default 'manual',
+  add column if not exists import_batch_id text,
+  add column if not exists updated_at timestamptz not null default now(),
+  add column if not exists retired_at timestamptz;
 
 -- Keep updated_at honest on every mutation.
 create or replace function forward_orders_set_updated_at()
@@ -308,12 +309,13 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists forward_orders_updated_at on forward_orders;
 create trigger forward_orders_updated_at
   before update on forward_orders
   for each row execute function forward_orders_set_updated_at();
 
-create index forward_orders_status_idx on forward_orders (status);
-create index forward_orders_import_batch_idx on forward_orders (import_batch_id);
+create index if not exists forward_orders_status_idx on forward_orders (status);
+create index if not exists forward_orders_import_batch_idx on forward_orders (import_batch_id);
 
 -- Refresh v_hedge_coverage_monthly so retired forwards drop out of coverage.
 -- Same column list as 003, so create or replace is valid. Only the forward_m
@@ -429,7 +431,7 @@ full outer join forward_m f
 -- forward discount, which matches the classic Australian importer picture and
 -- is what the IRP test harness asserts.
 
-create table rate_assumptions (
+create table if not exists rate_assumptions (
   currency text not null,
   as_of date not null default current_date,
   annual_rate numeric(12,6) not null,
@@ -442,10 +444,11 @@ insert into rate_assumptions (currency, as_of, annual_rate, source, note) values
   ('USD', current_date, 0.041000, 'seed', 'Anchor currency short rate.'),
   ('AUD', current_date, 0.043500, 'seed', 'Above USD, so AUD/USD is at a forward discount.'),
   ('EUR', current_date, 0.032500, 'seed', 'Below USD, so EUR/USD is at a forward premium.'),
-  ('GBP', current_date, 0.047500, 'seed', 'Above USD, so GBP/USD is at a forward discount.');
+  ('GBP', current_date, 0.047500, 'seed', 'Above USD, so GBP/USD is at a forward discount.')
+  on conflict do nothing;
 
 -- Latest assumption per currency.
-create view v_rate_assumptions_latest as
+create or replace view v_rate_assumptions_latest as
 select distinct on (currency)
   currency,
   as_of,
@@ -466,7 +469,7 @@ order by currency, as_of desc;
 -- Each run stamps an as_of date and a full set of target_date rows. The latest
 -- view exposes only the most recent run per pair.
 
-create table spot_forecasts (
+create table if not exists spot_forecasts (
   id bigint generated always as identity primary key,
   pair text not null references currency_pairs (pair),
   as_of date not null default current_date,
@@ -479,10 +482,10 @@ create table spot_forecasts (
   unique (pair, as_of, target_date)
 );
 
-create index spot_forecasts_pair_asof_idx on spot_forecasts (pair, as_of desc);
+create index if not exists spot_forecasts_pair_asof_idx on spot_forecasts (pair, as_of desc);
 
 -- The most recent run per pair, with all of its horizon rows.
-create view v_spot_forecast_latest as
+create or replace view v_spot_forecast_latest as
 with latest as (
   select pair, max(as_of) as as_of
   from spot_forecasts
@@ -508,7 +511,7 @@ order by f.pair, f.target_date;
 -- The latest view exposes the most recent run per pair and bank. Rates are
 -- numeric(12,6); money is not involved here. Australian English, no em-dashes.
 
-create table bank_forecast_ranges (
+create table if not exists bank_forecast_ranges (
   id bigint generated always as identity primary key,
   pair text not null references currency_pairs (pair),
   as_of date not null default current_date,
@@ -524,12 +527,12 @@ create table bank_forecast_ranges (
   unique (pair, as_of, bank, horizon_label)
 );
 
-create index bank_forecast_ranges_pair_asof_idx
+create index if not exists bank_forecast_ranges_pair_asof_idx
   on bank_forecast_ranges (pair, as_of desc);
 
 -- The most recent run per pair and bank, with all of its horizon rows. When a
 -- pair has forecasts from several banks, each bank's latest run is returned.
-create view v_bank_forecast_latest as
+create or replace view v_bank_forecast_latest as
 with latest as (
   select pair, bank, max(as_of) as as_of
   from bank_forecast_ranges
