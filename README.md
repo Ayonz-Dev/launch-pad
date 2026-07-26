@@ -17,7 +17,7 @@ every app reads roles the same way.
 launch-pad/
   apps/
     costing/          # Ayonz Costing Platform: quotes, sales/manager/ceo approval (real app, IAM)
-    hedging/          # FX hedging (placeholder on the shared shell, to be ported)
+    hedging/          # FX hedging & treasury (consolidating 3 Hedging-Tool versions)
     shipping/         # Shipment visibility control tower (ported, per-user auth + RLS)
   packages/
     db/               # Supabase browser/server clients, DB types, SQL migrations

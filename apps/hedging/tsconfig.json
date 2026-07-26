@@ -3,18 +3,13 @@
   "compilerOptions": {
     "noEmit": true,
     "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "incremental": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
-    "allowJs": true
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noImplicitOverride": true,
+    "types": ["vitest/globals"]
   },
   "include": [
     "next-env.d.ts",
@@ -22,7 +17,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

@@ -1,16 +1,13 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Ayonz Hedging',
-  description: 'FX hedging (placeholder on the shared platform shell).',
+  title: 'FX Hedging & Cash Analytics',
+  description: 'Corporate FX hedging coverage and USD cash analytics.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-AU">
       <body>{children}</body>

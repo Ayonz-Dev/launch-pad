@@ -1,110 +1,317 @@
-/* Minimal content styles. The login and nav chrome come from @launchpad/shell,
-   which is self styled; this only covers the placeholder page content.
-   Australian English. No em dashes. */
-
 :root {
-  --paper: #e8e9e3;
-  --panel: #fbfbf8;
-  --ink: #191c1f;
-  --ink-2: #5c605c;
-  --line: #cfd0c8;
-  --teal: #0f5257;
-  --amber: #b67a1e;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  --bg: #0b1120;
+  --panel: #131c31;
+  --panel-2: #1a2540;
+  --border: #26324f;
+  --text: #e8edf7;
+  --muted: #93a1c0;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --accent: #60a5fa;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
 body {
   margin: 0;
-  padding: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  line-height: 1.45;
 }
 
 .page {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 20px;
-}
-.page h1 {
-  font-size: 20px;
-  margin: 0 0 4px;
-}
-.page .sub {
-  color: var(--ink-2);
-  margin: 0 0 20px;
+  padding: 32px 24px 64px;
 }
 
-.eyebrow {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.page-head h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.page-head .anchor {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.scenario-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 24px;
+}
+
+.scenario-chip {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  background: var(--panel);
+}
+
+.scenario-chip.is-active {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 12px;
   text-transform: uppercase;
-  color: var(--teal);
+  letter-spacing: 0.04em;
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 650;
+  margin-top: 6px;
+}
+
+.kpi-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.tone-good { color: var(--good); }
+.tone-warn { color: var(--warn); }
+.tone-bad { color: var(--bad); }
+.tone-neutral { color: var(--text); }
+
+.section-title {
+  font-size: 15px;
+  margin: 24px 0 12px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.coverage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 640px;
+}
+
+.coverage-table th,
+.coverage-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.coverage-table th {
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--panel);
+}
+
+.coverage-table td.num,
+.coverage-table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.coverage-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.empty,
+.notice {
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 14px;
+}
+
+.notice code {
+  color: var(--accent);
+}
+
+.rate-chart {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.rate-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rate-chart-controls strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.rate-chart-controls input[type='range'] {
+  flex: 1 1 220px;
+  max-width: 360px;
+  accent-color: var(--manual, #f472b6);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+/* Forms (bank forecast intake) */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  flex: 1 1 180px;
+}
+
+.field > span {
   font-weight: 600;
 }
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.stat {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 14px 16px;
-}
-.stat .label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-2);
-}
-.stat .value {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
-  margin-top: 6px;
-  color: var(--ink);
-}
-
-.placeholder-band {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 10px;
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  background: #fbf3e4;
-}
-
-.note {
-  color: var(--ink-2);
+input[type='text'],
+input[type='date'],
+input[type='number'],
+select,
+textarea {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
   font-size: 13px;
+  font-family: inherit;
+  width: 100%;
 }
-.note ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
+
+textarea {
+  resize: vertical;
+  line-height: 1.5;
 }
-.note li {
-  margin: 4px 0;
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.coverage-table input[type='number'],
+.coverage-table input[type='date'] {
+  padding: 4px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn {
+  background: var(--accent);
+  color: #0b1120;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+/* Recommendation actions on the forex dashboard */
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill-cash {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--good);
+}
+
+.pill-hedge {
+  background: rgba(96, 165, 250, 0.15);
+  color: var(--accent);
+}
+
+.pill-spot {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warn);
+}
+
+.pill-exposed {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--bad);
 }
