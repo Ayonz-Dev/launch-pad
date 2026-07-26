@@ -5,13 +5,16 @@ import type {
   ShipmentNotes,
   Sku,
 } from "../types";
-import { milestonesFromStatus, positionFromStatus } from "../milestones";
+import type { GeoPoint } from "../types";
+import { milestonesFromStatus } from "../milestones";
 import {
+  canonicalPortKey,
   linerToCarrier,
   lookupPort,
   normalisePortName,
   normaliseSalesRep,
 } from "./ports";
+import { SEA_LANES } from "./lanes";
 import { matchRetailer } from "./retailers";
 
 export interface ParseResult {
@@ -385,17 +388,12 @@ export function parseReport(
     else if (statusU === "ON WATER") onWater++;
     else planned++;
 
-    const routePath =
-      origin.lat || destination.lat
-        ? [
-            { lat: origin.lat, lng: origin.lng },
-            { lat: destination.lat, lng: destination.lng },
-          ]
-        : [];
-    const currentPosition = positionFromStatus(
+    const routePath = buildRoutePath(g.pol, g.pod, g.transport, origin, destination);
+    // Place the current-position dot on the actual lane, not a straight midpoint,
+    // so an on-water shipment reads as being at sea rather than over land.
+    const currentPosition = positionOnPath(
+      routePath,
       g.status,
-      origin,
-      destination,
       reportDateISO ?? g.eta ?? "",
     );
 
@@ -481,6 +479,78 @@ function cleanComment(raw: string): string {
     .filter(Boolean)
     .join(" ")
     .trim();
+}
+
+type LatLng = { lat: number; lng: number };
+
+// The polyline the map draws for a shipment. Sea shipments follow the precomputed
+// marine lane (through straits and canals, never across land); train and air
+// shipments draw a straight line, which is correct for an overland or flight leg.
+// Falls back to a straight origin-to-destination segment when we have no lane.
+function buildRoutePath(
+  pol: string,
+  pod: string,
+  transport: string,
+  origin: GeoPoint,
+  destination: GeoPoint,
+): LatLng[] {
+  const straight: LatLng[] =
+    origin.lat || destination.lat
+      ? [
+          { lat: origin.lat, lng: origin.lng },
+          { lat: destination.lat, lng: destination.lng },
+        ]
+      : [];
+  const mode = transport.toUpperCase();
+  if (mode === "TRAIN" || mode === "AIR") return straight;
+  const lane = SEA_LANES[`${canonicalPortKey(pol)}__${canonicalPortKey(pod)}`];
+  if (lane && lane.length >= 2) return lane.map(([lat, lng]) => ({ lat, lng }));
+  return straight;
+}
+
+// The current-position dot, placed on the lane itself. Arrived sits at the
+// destination; on water sits halfway along the route by distance; anything else
+// has not sailed yet, so no dot.
+function positionOnPath(
+  path: LatLng[],
+  status: string,
+  asOf: string,
+): { lat: number; lng: number; asOf: string } | undefined {
+  if (path.length < 2) return undefined;
+  const s = status.toUpperCase();
+  if (s === "ARRIVED") {
+    const end = path[path.length - 1];
+    return { lat: end.lat, lng: end.lng, asOf };
+  }
+  if (s === "ON WATER") {
+    const mid = pointAlong(path, 0.5);
+    return { lat: mid.lat, lng: mid.lng, asOf };
+  }
+  return undefined;
+}
+
+// Point at `frac` (0..1) of the polyline's length, linearly interpolated.
+function pointAlong(path: LatLng[], frac: number): LatLng {
+  const seg: number[] = [];
+  let total = 0;
+  for (let i = 1; i < path.length; i++) {
+    const d = Math.hypot(path[i].lat - path[i - 1].lat, path[i].lng - path[i - 1].lng);
+    seg.push(d);
+    total += d;
+  }
+  if (total === 0) return path[0];
+  let target = frac * total;
+  for (let i = 0; i < seg.length; i++) {
+    if (target <= seg[i]) {
+      const t = seg[i] === 0 ? 0 : target / seg[i];
+      return {
+        lat: path[i].lat + (path[i + 1].lat - path[i].lat) * t,
+        lng: path[i].lng + (path[i + 1].lng - path[i].lng) * t,
+      };
+    }
+    target -= seg[i];
+  }
+  return path[path.length - 1];
 }
 
 // Merge several per-sheet parse results into one, de-duplicating shipments by id
