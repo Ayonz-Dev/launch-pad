@@ -39,12 +39,16 @@ Increment 3, part 2 (done): the spot section is **multi-currency**. A currency
 switcher (`components/CurrencySpot`) swaps the pair shown between AUD/USD,
 GBP/USD and EUR/USD, each quoted USD per unit.
 
+Increment 4 (done): the **shared shell login gate**. Sign-in is the shared
+`LoginForm` at `/login`; `middleware.ts` refreshes the session and redirects any
+unauthenticated request to it, and a slim `TopBar` gives a signed-in user a
+sign-out control. To keep the no-keys sample experience, the gate is skipped
+entirely when Supabase is not configured (no URL or anon key), so the app still
+renders on bundled sample data with no login. Gated by session presence, not an
+IAM app role (hedging is not yet a seeded IAM application).
+
 Still to come:
 
-- **Shared shell login and IAM gate.** The app has no login yet; adding the
-  shared `LoginForm` and a session gate needs the pages moved under an `(app)`
-  route group (which shifts their relative imports), so it is a clean follow-on
-  rather than a rushed change.
 - **Funding-currency allocation.** Which of AUD/GBP/EUR settles each incoming
   order is an open decision (SPEC section 8). Until it is set, incoming orders
   are counted as USD (correct in total) and the currency switcher drives the
