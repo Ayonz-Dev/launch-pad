@@ -21,6 +21,18 @@ function fmtDate(iso: string): string {
   });
 }
 
+// Count and summarise the captured notes (cell comments, line notes, extras) so
+// the queue can show a badge and a hover title without opening the shipment.
+function noteSummary(s: ShipmentDerived): { count: number; title: string } {
+  const n = s.notes;
+  if (!n) return { count: 0, title: "" };
+  const parts: string[] = [];
+  for (const c of n.comments ?? []) parts.push(`${c.field}: ${c.text}`);
+  for (const ln of n.lineNotes ?? []) parts.push(ln.agl ? `${ln.agl}: ${ln.text}` : ln.text);
+  for (const [k, v] of Object.entries(n.extras ?? {})) parts.push(`${k}: ${v}`);
+  return { count: parts.length, title: parts.join("\n") };
+}
+
 export default function ShipmentTable({
   shipments,
 }: {
@@ -41,7 +53,8 @@ export default function ShipmentTable({
       if (filter !== "all" && s.status !== filter) return false;
       if (rep !== "all" && !(s.salesReps ?? []).includes(rep)) return false;
       if (!q) return true;
-      const hay = `${s.reference} ${s.brand} ${s.retailer ?? ""} ${s.po ?? ""} ${(s.salesReps ?? []).join(" ")} ${s.containerNo ?? ""}`.toLowerCase();
+      const agls = (s.agls ?? []).join(" ");
+      const hay = `${s.reference} ${s.brand} ${s.retailer ?? ""} ${s.po ?? ""} ${(s.salesReps ?? []).join(" ")} ${s.containerNo ?? ""} ${agls} ${s.etaNote ?? ""} ${noteSummary(s).title}`.toLowerCase();
       return hay.includes(q.toLowerCase());
     });
   }, [shipments, filter, rep, q]);
@@ -83,7 +96,7 @@ export default function ShipmentTable({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search PO, brand, retailer, container…"
+            placeholder="Search PO, brand, retailer, container, AGL, notes…"
             className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-harbor focus:ring-2 focus:ring-harbor/20 sm:w-72"
           />
         </div>
@@ -99,6 +112,7 @@ export default function ShipmentTable({
               <th className="px-4 py-2.5 font-medium">Stage</th>
               <th className="px-4 py-2.5 font-medium">ETA</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
+              <th className="px-4 py-2.5 font-medium">Notes</th>
             </tr>
           </thead>
           <tbody>
@@ -140,11 +154,32 @@ export default function ShipmentTable({
                     </div>
                   )}
                 </td>
+                <td className="px-4 py-3 align-top text-slate-600">
+                  {(() => {
+                    const { count, title } = noteSummary(s);
+                    if (!s.etaNote && count === 0) {
+                      return <span className="text-slate-300">—</span>;
+                    }
+                    const extra = count - (s.etaNote ? 1 : 0);
+                    return (
+                      <div title={title} className="max-w-[16rem]">
+                        {s.etaNote && (
+                          <div className="truncate text-xs text-delayed">{s.etaNote}</div>
+                        )}
+                        {extra > 0 && (
+                          <div className="mt-0.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                            +{extra} note{extra > 1 ? "s" : ""}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-400">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
                   {shipments.length === 0 ? (
                     <>
                       No shipments loaded yet.{" "}
