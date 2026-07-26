@@ -74,6 +74,29 @@ The on-screen sheet (`AyonzCostingSheet.jsx`) and the schema
 wired to props/callbacks, but their calculations and presentation were kept.
 Do not redesign the sheet; it is the piece the user specifically asked for.
 
+## D6. A shared login shell in `@launchpad/shell`
+
+Sign-in, the authenticated nav chrome, the session guard and the
+session-refresh middleware are extracted into `@launchpad/shell` rather than
+living in each app.
+
+- A person signs in against one identity model with one look, and a second app
+  is chrome-complete on day one: point its login page at `LoginForm`, wrap its
+  authed area in `AppShell`, re-export `createSessionMiddleware`. The costing
+  app was refactored onto this and lost its own login page, nav and sign-out.
+- The shell components are self styled (inline styles over a small `theme`),
+  not dependent on any app's `globals.css`, so they render identically wherever
+  they are dropped. App-specific content (the costing queue, forms) keeps using
+  its own `globals.css`; only the shared shell is themed centrally.
+- Client and server code are split by entry point: `@launchpad/shell` is
+  client-safe, `@launchpad/shell/server` carries the `next/headers` and
+  `redirect` helpers behind `server-only`, and `@launchpad/shell/middleware`
+  holds the edge middleware factory. This stops a client component from ever
+  pulling `next/headers` into the browser bundle.
+- Nav links stay app-owned: `AppShell` takes a `links` array, so each app
+  derives its own menu from the user's role while sharing the frame. The role
+  logic still lives in `@launchpad/auth` (D3).
+
 ## Open questions (do not resolve unilaterally)
 
 - Whether roles stay single-per-person (`profiles.role`) or become per-app once

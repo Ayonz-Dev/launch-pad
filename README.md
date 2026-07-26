@@ -20,6 +20,7 @@ launch-pad/
   packages/
     db/               # Supabase browser/server clients, DB types, SQL migrations
     auth/             # Shared identity: roles, permissions, approval chain, guards
+    shell/            # Shared login shell: sign-in, app chrome, session guard, middleware
 ```
 
 Later apps (`hedging`, `shipping`, `launch-readiness`) drop in under `apps/*`
@@ -54,7 +55,20 @@ stored. See `apps/costing/README.md` for the full contract.
 - `roles.ts` - the role enum, human labels, the costing approval chain and a
   small permission model. No business rule about a role lives in app code; it
   lives here as data.
-- `guards.ts` - `requireSession` / `requireRole` helpers for server components.
+- `guards.ts` - `loadSessionUser` / `hasRole` helpers for server components.
+
+### `@launchpad/shell`
+
+The shared login shell, so every app signs in and frames itself the same way.
+
+- `LoginForm` - the Supabase email/password sign-in, self styled, parameterised
+  by brand and redirect target.
+- `AppShell` - the authenticated chrome (brand, nav links, identity, sign out).
+  Each app passes its own role-derived links; the chrome is shared.
+- `server.ts` - `getServerSupabase` (the Next cookies() adapter) and
+  `requireUser`, which redirects to login when there is no session.
+- `middleware.ts` - `createSessionMiddleware`, so each app's middleware is a two
+  line re-export.
 
 ## Getting started
 

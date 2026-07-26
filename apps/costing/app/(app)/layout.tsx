@@ -1,38 +1,34 @@
-// Server layout for the authenticated area. Requires a session and profile;
-// otherwise redirects to /login. Loads the role and renders the nav.
+// Server layout for the authenticated area. The session guard and the chrome
+// come from the shared shell; this file only decides the costing app's nav
+// links from the user's role.
 //
 // Australian English. No em dashes.
 
-import { redirect } from 'next/navigation';
-import { getServerSupabase } from '@/lib/supabase-server';
-import { loadSessionUser } from '@launchpad/auth';
-import { roleLabel } from '@launchpad/auth';
-import { NavLinks } from '@/components/NavLinks';
-import { SignOutButton } from '@/components/SignOutButton';
+import { requireUser } from '@launchpad/shell/server';
+import { AppShell, type NavLink } from '@launchpad/shell';
+import { canManageRateCards, canSetWorkingFx, roleLabel } from '@launchpad/auth';
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = getServerSupabase();
-  const user = await loadSessionUser(supabase);
-  if (!user) redirect('/login');
-
+  const { user } = await requireUser('/login');
   const role = user.profile.role;
 
+  const links: NavLink[] = [{ href: '/queue', label: 'Queue' }];
+  if (role === 'account_coordinator') {
+    links.push({ href: '/new', label: 'New costing' });
+  }
+  if (canManageRateCards(role) || canSetWorkingFx(role)) {
+    links.push({ href: '/settings', label: 'Settings' });
+  }
+
+  const whoami = `${user.profile.full_name ?? user.email} · ${roleLabel(role)}`;
+
   return (
-    <>
-      <nav className="nav">
-        <span className="brand">Ayonz · Costing</span>
-        <NavLinks role={role} />
-        <span className="spacer" />
-        <span className="whoami">
-          {user.profile.full_name ?? user.email} · {roleLabel(role)}
-        </span>
-        <SignOutButton />
-      </nav>
+    <AppShell brand="Ayonz · Costing" links={links} whoami={whoami}>
       {children}
-    </>
+    </AppShell>
   );
 }

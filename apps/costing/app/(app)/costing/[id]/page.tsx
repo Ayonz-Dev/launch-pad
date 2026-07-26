@@ -5,7 +5,7 @@
 // Australian English. No em dashes.
 
 import { notFound, redirect } from 'next/navigation';
-import { getServerSupabase } from '@/lib/supabase-server';
+import { getServerSupabase } from '@launchpad/shell/server';
 import { loadSessionUser } from '@launchpad/auth';
 import type {
   ContainerConfig,
