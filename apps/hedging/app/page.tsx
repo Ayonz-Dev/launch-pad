@@ -5,6 +5,7 @@ import { CoveragePairTable } from '../components/CoveragePairTable';
 import { RateChart } from '../components/RateChart';
 import { CurrencySpot } from '../components/CurrencySpot';
 import { IncomingByWeek } from '../components/IncomingByWeek';
+import { UncoveredExposure } from '../components/UncoveredExposure';
 import { groupByIsoWeek } from '../lib/incoming';
 import { isSupabaseConfigured } from '../lib/supabase/server';
 import {
@@ -18,6 +19,7 @@ import {
   fetchSpotForecasts,
   fetchBankForecastRanges,
   fetchIncomingFromShipping,
+  fetchTotalHedgedUsd,
 } from '../lib/supabase/queries';
 import {
   rollupCoverage,
@@ -93,9 +95,14 @@ export default async function DashboardPage({
     fetchRateAssumptions(),
   ]);
 
-  // Incoming USD requirements sourced from the shipping app (visibility.shipments).
-  const incoming = await fetchIncomingFromShipping();
+  // Incoming USD requirements sourced from the shipping app (visibility.shipments),
+  // and the USD already held against them (hedged forwards + offshore cash).
+  const [incoming, hedgedUsd] = await Promise.all([
+    fetchIncomingFromShipping(),
+    fetchTotalHedgedUsd(scenarioId),
+  ]);
   const incomingWeeks = groupByIsoWeek(incoming);
+  const requiredUsd = incoming.reduce((sum, o) => sum + o.amountUsd, 0);
 
   const rollup = rollupCoverage(coverage);
   const cashUsd = totalCashUsd(cash);
@@ -160,6 +167,13 @@ export default async function DashboardPage({
           }
         />
       </section>
+
+      <h2 className="section-title">Uncovered exposure and funding</h2>
+      <UncoveredExposure
+        requiredUsd={requiredUsd}
+        hedgedUsd={hedgedUsd}
+        cashUsd={cashUsd}
+      />
 
       <h2 className="section-title">Incoming USD from shipping, by week ETA</h2>
       <IncomingByWeek buckets={incomingWeeks} />

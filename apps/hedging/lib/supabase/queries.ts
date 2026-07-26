@@ -297,3 +297,24 @@ export async function fetchIncomingFromShipping(): Promise<IncomingOrder[]> {
     return [];
   }
 }
+
+// Total USD locked in open hedged forward buys, across all funding currencies.
+// Unlike fetchHedgeInventory (pair-scoped), this sums every open buy, because
+// hedged USD covers the single USD requirement regardless of which currency the
+// forward was bought with. Returns 0 when Supabase is not configured.
+export async function fetchTotalHedgedUsd(
+  scenarioId: number | null,
+): Promise<number> {
+  const client = getServerClient();
+  if (!client) return 0;
+  const { data, error } = await scopeToScenario(
+    client
+      .from('forward_orders')
+      .select('amount_usd, buy_sell, retired_at')
+      .eq('buy_sell', 'buy')
+      .is('retired_at', null),
+    scenarioId,
+  );
+  if (error) return 0;
+  return (data ?? []).reduce((sum, row) => sum + num(row.amount_usd), 0);
+}

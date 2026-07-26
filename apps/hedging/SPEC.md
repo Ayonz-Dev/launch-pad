@@ -142,9 +142,11 @@ provider behind an env flag; fall back to the cached last-known rate offline.
 
 ## 8. Open decisions (resolve with Marcel, do not assume)
 
-- **Funding-currency allocation.** Is each order funded from its market's
-  currency (AU->AUD etc.), or pooled and funded at treasury discretion? The spec
-  defaults to market-derived with an override; confirm.
+- **Funding-currency allocation.** RESOLVED: all supplier payments are made in
+  USD, so there is no per-order funding currency. The requirement is a single
+  USD figure; AUD, GBP and EUR are alternative currencies to buy the uncovered
+  USD at spot (a pooled treasury choice), shown side by side, not split.
+  Implemented in lib/exposure.ts and components/UncoveredExposure.tsx.
 - **Payment timing.** Is `eta_current` the right "money needed" date, or is it
   a payment term offset from ETD/BL date? Adjust the bucketing accordingly.
 - **Account draw-down order.** Oldest-requirement-first is assumed; confirm vs a
